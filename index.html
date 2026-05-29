@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0E1F14">
+<title>Photo Wall · Payton's Graduation</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Nunito:wght@400;600;700;800&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #0E1F14;
+  --panel:   #132B19;
+  --card:    #1A3520;
+  --green:   #2E7044;
+  --bright:  #3D9955;
+  --gold:    #D4A843;
+  --gold-d:  rgba(212,168,67,0.25);
+  --cream:   #F5EDD8;
+  --cream2:  rgba(245,237,216,0.6);
+  --white:   #FDFAF3;
+  --sep:     rgba(212,168,67,0.2);
+  --red:     #D6604A;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body { height:100%; font-family:'Nunito',sans-serif; background:var(--bg); color:var(--white); overflow:hidden; }
+.app { height:100dvh; display:flex; flex-direction:column; overflow:hidden; position:relative; }
+
+.screen {
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; align-items:center;
+  transition:opacity 0.35s, transform 0.35s;
+  overflow-y:auto;
+}
+.screen.hidden { opacity:0; transform:translateY(12px); pointer-events:none; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ── LANDING ── */
+#landingScreen {
+  background:var(--bg); justify-content:flex-start; padding:0 24px 48px;
+}
+#landingScreen::before {
+  content:''; position:fixed; top:0;left:0;right:0;height:45%;
+  background:radial-gradient(ellipse at 50% 0%, rgba(61,153,85,0.12) 0%, transparent 65%);
+  pointer-events:none;
+}
+
+.land-inner {
+  display:flex; flex-direction:column; align-items:center; width:100%;
+  padding-top:max(env(safe-area-inset-top),32px); position:relative;
+}
+
+.school-badge {
+  display:flex; align-items:center; gap:8px;
+  background:rgba(212,168,67,0.1);
+  border:1px solid rgba(212,168,67,0.3);
+  border-radius:40px; padding:6px 16px;
+  margin-bottom:20px;
+}
+.school-badge span { font-size:16px; }
+.school-badge-text {
+  font-size:11px; letter-spacing:2px; text-transform:uppercase;
+  color:var(--gold); font-weight:700;
+}
+
+.grad-name-display {
+  font-family:'Cormorant Garamond',serif;
+  font-size:42px; font-weight:600; color:var(--white);
+  line-height:1; margin-bottom:6px; text-align:center;
+}
+.grad-year {
+  font-size:13px; letter-spacing:4px; text-transform:uppercase;
+  color:var(--bright); margin-bottom:24px;
+}
+
+.desc {
+  font-size:15px; color:var(--cream2);
+  line-height:1.65; text-align:center;
+  max-width:300px; margin-bottom:32px;
+}
+.desc strong { color:var(--white); font-weight:600; }
+
+.upload-zone {
+  width:100%; max-width:320px;
+  border:2px dashed rgba(61,153,85,0.4); border-radius:16px;
+  padding:36px 20px; text-align:center; cursor:pointer;
+  background:rgba(255,255,255,0.03); transition:all 0.2s;
+  position:relative; margin-bottom:16px;
+}
+.upload-zone:active { background:rgba(61,153,85,0.1); border-color:var(--bright); }
+.upload-zone input { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+.upload-icon { font-size:42px; margin-bottom:10px; }
+.upload-cta { font-size:16px; font-weight:700; color:var(--white); margin-bottom:4px; }
+.upload-hint { font-size:12px; color:var(--cream2); }
+
+.error-box {
+  display:none; margin-top:16px; width:100%; max-width:320px;
+  background:rgba(214,96,74,0.15); border:1px solid rgba(214,96,74,0.4);
+  color:#FFD6CC; padding:12px 16px; border-radius:10px;
+  font-size:13px; line-height:1.4; text-align:center;
+}
+.reading-ind {
+  display:none; margin-top:16px;
+  font-size:13px; color:var(--cream2); letter-spacing:1px;
+  align-items:center; gap:8px;
+}
+.spin-sm {
+  width:14px; height:14px; border-radius:50%;
+  border:2px solid rgba(255,255,255,0.15);
+  border-top-color:var(--white);
+  animation:spin 0.7s linear infinite;
+  flex-shrink:0;
+}
+
+/* ── PREVIEW ── */
+#previewScreen {
+  background:#0A1A10; justify-content:flex-start;
+  padding:max(env(safe-area-inset-top),20px) 20px max(env(safe-area-inset-bottom),20px);
+  gap:14px;
+}
+.preview-eyebrow {
+  font-size:10px; letter-spacing:3px; text-transform:uppercase;
+  color:var(--bright); font-weight:700; align-self:flex-start; margin-bottom:-6px;
+}
+.photo-wrap {
+  width:100%; max-width:380px; border-radius:14px; overflow:hidden;
+  position:relative; flex-shrink:0; box-shadow:0 4px 28px rgba(0,0,0,0.5);
+  max-height:240px;
+}
+.photo-wrap img { width:100%; height:100%; object-fit:cover; display:block; max-height:240px; }
+.photo-overlay {
+  position:absolute; bottom:0; left:0; right:0;
+  background:linear-gradient(transparent, rgba(0,0,0,0.72));
+  padding:28px 16px 14px;
+}
+.overlay-caption { font-size:13px; color:rgba(255,255,255,0.8); font-style:italic; margin-bottom:3px; }
+.overlay-name { font-family:'Cormorant Garamond',serif; font-size:19px; color:var(--white); font-weight:600; }
+
+.field-wrap { width:100%; max-width:380px; }
+.field-lbl {
+  display:block; font-size:11px; letter-spacing:2px; text-transform:uppercase;
+  color:rgba(255,255,255,0.4); margin-bottom:7px; font-weight:600;
+}
+.text-inp {
+  width:100%; background:rgba(255,255,255,0.07);
+  border:1.5px solid rgba(255,255,255,0.12); border-radius:10px;
+  padding:12px 14px; font-family:'Nunito',sans-serif; font-size:15px;
+  color:var(--white); outline:none; transition:border-color 0.2s;
+}
+.text-inp::placeholder { color:rgba(255,255,255,0.3); }
+.text-inp:focus { border-color:rgba(61,153,85,0.55); }
+.char-count { font-size:11px; color:rgba(255,255,255,0.3); text-align:right; margin-top:4px; }
+
+.uploading-ind {
+  display:none; align-items:center; gap:10px;
+  font-size:14px; color:var(--bright); width:100%; max-width:380px;
+}
+.uploading-ind.show { display:flex; }
+.spin-ring {
+  width:18px; height:18px; border-radius:50%;
+  border:2px solid rgba(61,153,85,0.3); border-top-color:var(--bright);
+  animation:spin 0.8s linear infinite;
+}
+
+.submit-btn {
+  width:100%; max-width:380px; padding:15px;
+  background:var(--gold); color:#0E1F14;
+  border:none; border-radius:12px;
+  font-family:'Nunito',sans-serif; font-size:16px; font-weight:800;
+  cursor:pointer; transition:opacity 0.2s, transform 0.1s; letter-spacing:0.5px;
+}
+.submit-btn:disabled { opacity:0.3; pointer-events:none; }
+.submit-btn:not(:disabled):active { transform:scale(0.98); opacity:0.9; }
+
+/* ── SUCCESS ── */
+#successScreen {
+  background:var(--bg); justify-content:center; align-items:center;
+  gap:20px; padding:24px; text-align:center;
+}
+#successScreen::before {
+  content:''; position:fixed; inset:0;
+  background:radial-gradient(ellipse at 50% 40%, rgba(212,168,67,0.1) 0%, transparent 55%);
+  pointer-events:none;
+}
+.success-icon { font-size:64px; position:relative; z-index:1; }
+.success-title {
+  font-family:'Cormorant Garamond',serif;
+  font-size:34px; color:var(--white); font-weight:600;
+  position:relative; z-index:1;
+}
+.success-sub {
+  font-size:15px; color:var(--cream2); line-height:1.65;
+  max-width:280px; position:relative; z-index:1;
+}
+.success-sub strong { color:var(--bright); font-weight:600; }
+.success-note {
+  font-family:'Caveat',cursive;
+  font-size:20px; color:var(--gold);
+  max-width:300px; line-height:1.4;
+  position:relative; z-index:1;
+}
+.another-btn {
+  padding:14px 40px;
+  background:rgba(255,255,255,0.07);
+  border:1.5px solid rgba(255,255,255,0.15);
+  border-radius:12px; font-family:'Nunito',sans-serif;
+  font-size:15px; font-weight:700; color:var(--white);
+  cursor:pointer; position:relative; z-index:1;
+}
+.another-btn:active { background:rgba(255,255,255,0.14); }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- LANDING -->
+<div class="screen" id="landingScreen">
+  <div class="land-inner">
+    <div class="school-badge">
+      <span>🦁</span>
+      <div class="school-badge-text">Excelsior Classical Academy</div>
+    </div>
+    <div class="grad-name-display">Payton Garrity</div>
+    <div class="grad-year">Class of 2026 · Durham Tech</div>
+    <p class="desc">
+      Drop your photo on the <strong>big screen</strong>. Your memory goes live at the party in seconds.
+    </p>
+
+    <div class="upload-zone">
+      <input type="file" id="fileInput" accept="image/*" onchange="handleFile(event)">
+      <div class="upload-icon">📸</div>
+      <div class="upload-cta">Tap to Add Your Photo</div>
+      <div class="upload-hint">Camera or photo library — your choice</div>
+    </div>
+
+    <div class="reading-ind" id="readingInd">
+      <div class="spin-sm"></div>
+      Loading your photo…
+    </div>
+    <div class="error-box" id="errorBox"></div>
+  </div>
+</div>
+
+<!-- PREVIEW -->
+<div class="screen hidden" id="previewScreen">
+  <div class="preview-eyebrow">Your Photo</div>
+
+  <div class="photo-wrap">
+    <img id="previewImg" src="" alt="preview">
+    <div class="photo-overlay">
+      <div class="overlay-caption" id="captionPreview" style="display:none"></div>
+      <div class="overlay-name" id="namePreview">Your name</div>
+    </div>
+  </div>
+
+  <div class="field-wrap">
+    <label class="field-lbl">Your name *</label>
+    <input class="text-inp" id="nameInput" type="text"
+      placeholder="e.g. Uncle Mike" maxlength="28" autocomplete="off"
+      oninput="document.getElementById('namePreview').textContent = this.value || 'Your name'; checkReady()">
+  </div>
+
+  <div class="field-wrap">
+    <label class="field-lbl">Add a comment <span style="opacity:0.45">(optional)</span></label>
+    <input class="text-inp" id="captionInput" type="text"
+      placeholder="e.g. So proud of you, Payton! 🎓" maxlength="60" autocomplete="off"
+      oninput="updateCaption(this.value); document.getElementById('charCount').textContent = this.value.length + '/60'">
+    <div class="char-count" id="charCount">0/60</div>
+  </div>
+
+  <div class="uploading-ind" id="uploadingInd">
+    <div class="spin-ring"></div>
+    <span>Sending to the screen…</span>
+  </div>
+
+  <button class="submit-btn" id="submitBtn" disabled onclick="uploadPhoto()">
+    Put it on the Screen →
+  </button>
+</div>
+
+<!-- SUCCESS -->
+<div class="screen hidden" id="successScreen">
+  <div class="success-icon">🎓</div>
+  <div class="success-title">You're on the wall!</div>
+  <p class="success-sub">
+    Look at the TV — your photo is <strong>live at Payton's party</strong> right now.
+  </p>
+  <div class="success-note">"Congratulations, Payton. Class of 2026." 🦁</div>
+  <button class="another-btn" onclick="addAnother()">Add Another Photo</button>
+</div>
+
+</div>
+<script>
+const SUPABASE_URL  = 'https://ykfvwqewnfnibpzytspn.supabase.co';
+const ANON_KEY      = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlrZnZ3cWV3bmZuaWJwenl0c3BuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MjE2NzYsImV4cCI6MjA5MDM5NzY3Nn0.cnMztZVHDV3Hof-26aRi4NIM7wKwjzxAfoMBR3oItms';
+const BUCKET        = 'graduation-photos';
+const PROPERTY_ID   = 'payton-2026';
+
+let selectedFile = null;
+
+function showError(msg) {
+  const b = document.getElementById('errorBox');
+  b.textContent = msg; b.style.display = 'block';
+}
+function clearError() {
+  document.getElementById('errorBox').style.display = 'none';
+}
+
+function handleFile(e) {
+  clearError();
+  const file = e.target.files[0];
+  if (!file) return;
+  selectedFile = file;
+  const ind = document.getElementById('readingInd');
+  ind.style.display = 'flex';
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    ind.style.display = 'none';
+    document.getElementById('previewImg').src = ev.target.result;
+    showScreen('previewScreen');
+    document.getElementById('nameInput').focus();
+  };
+  reader.onerror = () => {
+    ind.style.display = 'none';
+    showError('Couldn\'t read that photo — try a different one.');
+  };
+  reader.readAsDataURL(file);
+}
+
+function updateCaption(val) {
+  const el = document.getElementById('captionPreview');
+  if (val.trim()) {
+    el.textContent = '"' + val + '"';
+    el.style.display = 'block';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+function checkReady() {
+  document.getElementById('submitBtn').disabled =
+    !document.getElementById('nameInput').value.trim();
+}
+
+async function uploadPhoto() {
+  const name    = document.getElementById('nameInput').value.trim();
+  const caption = document.getElementById('captionInput').value.trim();
+  if (!name || !selectedFile) return;
+
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('uploadingInd').classList.add('show');
+
+  try {
+    // 1. Upload to Supabase Storage
+    const ts   = Date.now();
+    const ext  = (selectedFile.name.split('.').pop() || 'jpg').toLowerCase();
+    const path = `${PROPERTY_ID}/${ts}.${ext}`;
+
+    const upRes = await fetch(
+      `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${path}`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${ANON_KEY}`,
+          'Content-Type': selectedFile.type || 'image/jpeg',
+        },
+        body: selectedFile
+      }
+    );
+    if (!upRes.ok) {
+      const t = await upRes.text().catch(() => '');
+      throw new Error(`Storage ${upRes.status}: ${t.slice(0,100)}`);
+    }
+
+    // 2. Save metadata
+    const metaRes = await fetch(`${SUPABASE_URL}/rest/v1/graduation_photos`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': ANON_KEY,
+        'Authorization': `Bearer ${ANON_KEY}`,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        file_path: path,
+        guest_name: name,
+        caption: caption,
+        property_id: PROPERTY_ID
+      })
+    });
+    if (!metaRes.ok) {
+      const t = await metaRes.text().catch(() => '');
+      throw new Error(`DB ${metaRes.status}: ${t.slice(0,100)}`);
+    }
+
+    showScreen('successScreen');
+
+  } catch(err) {
+    console.error(err);
+    document.getElementById('uploadingInd').classList.remove('show');
+    document.getElementById('submitBtn').disabled = false;
+    let errEl = document.getElementById('previewErr');
+    if (!errEl) {
+      errEl = document.createElement('div');
+      errEl.id = 'previewErr';
+      errEl.style.cssText = 'margin-top:10px;background:rgba(214,96,74,0.15);border:1px solid rgba(214,96,74,0.4);color:#FFD6CC;padding:10px 14px;border-radius:10px;font-size:12px;text-align:center;width:100%;max-width:380px;line-height:1.5;';
+      document.getElementById('previewScreen').appendChild(errEl);
+    }
+    errEl.textContent = err.message || 'Something went wrong. Try again.';
+    errEl.style.display = 'block';
+  }
+}
+
+function addAnother() {
+  selectedFile = null;
+  document.getElementById('fileInput').value    = '';
+  document.getElementById('nameInput').value    = '';
+  document.getElementById('captionInput').value = '';
+  document.getElementById('namePreview').textContent = 'Your name';
+  document.getElementById('captionPreview').style.display = 'none';
+  document.getElementById('charCount').textContent = '0/60';
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('uploadingInd').classList.remove('show');
+  const pe = document.getElementById('previewErr');
+  if (pe) pe.style.display = 'none';
+  clearError();
+  showScreen('landingScreen');
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s =>
+    s.classList.toggle('hidden', s.id !== id)
+  );
+}
+</script>
+</body>
+</html>
